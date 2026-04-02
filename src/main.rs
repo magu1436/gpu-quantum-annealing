@@ -1,3 +1,5 @@
+use crate::simulator::complex::Complex64;
+
 mod simulator;
 
 fn main() {
@@ -5,9 +7,9 @@ fn main() {
     println!("{:?}", r);
 
     let expected = vec![
-        2.0, 4.0, 6.0,
-        8.0, 10.0, 12.0,
-        14.0, 16.0, 18.0,
+        Complex64 { re: 2.0f64, im: 2.0f64 }, Complex64 { re: 4.0f64, im: 4.0f64 }, Complex64 { re: 6.0f64, im: 6.0f64 },
+        Complex64 { re: 8.0f64, im: 8.0f64 }, Complex64 { re: 10.0f64, im: 10.0f64 }, Complex64 { re: 12.0f64, im: 12.0f64 },
+        Complex64 { re: 14.0f64, im: 14.0f64 }, Complex64 { re: 16.0f64, im: 16.0f64 }, Complex64 { re: 18.0f64, im: 18.0f64 },
     ];
 
     assert_eq!(r, expected);
