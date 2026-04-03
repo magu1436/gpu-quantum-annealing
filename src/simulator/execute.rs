@@ -42,7 +42,6 @@ pub fn excute() -> Vec<Complex64>{
     let amplitudes_to_probabilities = module.load_function("kernels/amplitudes_to_probabilities.cu").unwrap();
 
     let f0_dev = stream.clone_htod(&f0).unwrap();
-    let f_temp_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
     let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
 
@@ -62,7 +61,6 @@ pub fn excute() -> Vec<Complex64>{
                 .arg(&b)
                 .arg(&diag_dev)
                 .arg(&n)
-                .arg(&f_temp_dev)
                 .launch(cfg)
                 .unwrap();
 
@@ -70,7 +68,7 @@ pub fn excute() -> Vec<Complex64>{
 
             stream
                 .launch_builder(&calc_norm)
-                .arg(&f_temp_dev)
+                .arg(&f0_dev)
                 .arg(&sum)
                 .arg(&n)
                 .launch(cfg)
@@ -78,10 +76,9 @@ pub fn excute() -> Vec<Complex64>{
 
             stream
                 .launch_builder(&update_f0)
-                .arg(&f_temp_dev)
+                .arg(&f0_dev)
                 .arg(&sum)
                 .arg(&n)
-                .arg(&f0_dev)
                 .launch(cfg)
                 .unwrap();
         }
@@ -92,12 +89,11 @@ pub fn excute() -> Vec<Complex64>{
         stream
             .launch_builder(&amplitudes_to_probabilities)
             .arg(&f0_dev)
-            .arg(&f_temp_dev)
             .launch(cfg)
             .unwrap();
     }
 
-    let prob = stream.clone_dtoh(&f_temp_dev).unwrap();
+    let prob = stream.clone_dtoh(&f0_dev).unwrap();
 
     let elapsed = start_time.elapsed();
     print!(
