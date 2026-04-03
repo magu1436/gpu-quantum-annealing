@@ -12,6 +12,10 @@ impl Complex64 {
     pub fn new(re: f64, im: f64) -> Self {
         Self { re, im }
     }
+
+    pub fn abs(&self) -> f64 {
+        (self.re * self.re + self.im * self.im).sqrt()
+    }
 }
 
 unsafe impl DeviceRepr for Complex64 {}

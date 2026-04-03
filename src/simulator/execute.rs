@@ -5,7 +5,7 @@ use cudarc::driver::{CudaContext, PushKernelArg};
 use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, launch_config::create_launch_config};
 
 
-pub fn excute() -> Vec<Complex64>{
+pub fn excute() -> Vec<f64>{
 
     let start_time = time::Instant::now();
     print!("\nExecuting quantum annealing simulation...\n");
@@ -39,7 +39,6 @@ pub fn excute() -> Vec<Complex64>{
     let develop_time = module.load_function("kernels/develop_time.cu").unwrap();
     let calc_norm = module.load_function("kernels/norm.cu").unwrap();
     let update_f0 = module.load_function("kernels/update_f0.cu").unwrap();
-    let amplitudes_to_probabilities = module.load_function("kernels/amplitudes_to_probabilities.cu").unwrap();
 
     let f0_dev = stream.clone_htod(&f0).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
@@ -84,23 +83,14 @@ pub fn excute() -> Vec<Complex64>{
         }
     }
 
-
-    unsafe {
-        stream
-            .launch_builder(&amplitudes_to_probabilities)
-            .arg(&f0_dev)
-            .launch(cfg)
-            .unwrap();
-    }
-
-    let prob = stream.clone_dtoh(&f0_dev).unwrap();
-
     let elapsed = start_time.elapsed();
     print!(
         "Quantum annealing simulation completed in {:.2?} seconds.\n",
         elapsed
     );
 
+    let result = stream.clone_dtoh(&f0_dev).unwrap();
+    let prob = amplitudes_to_probabilities(result);
     prob
 
 }
@@ -122,4 +112,12 @@ fn objective_function(idx: usize) -> f64 {
         }
     }
     result
+}
+
+fn amplitudes_to_probabilities(amplitudes: Vec<Complex64>) -> Vec<f64> {
+    let mut probabilities = vec![0.0; amplitudes.len()];
+    for (i, v) in amplitudes.iter().enumerate() {
+        probabilities[i] = v.abs();
+    }
+    probabilities
 }
