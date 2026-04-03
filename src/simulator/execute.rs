@@ -37,10 +37,10 @@ pub fn excute() -> Vec<Complex64>{
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx).unwrap();
 
-    let develop_time = module.load_function("kernels/develop_time").unwrap();
-    let calc_norm = module.load_function("kernels/norm").unwrap();
-    let update_f0 = module.load_function("kernels/update_f0").unwrap();
-    let amplitudes_to_probabilities = module.load_function("kernels/amplitudes_to_probabilities").unwrap();
+    let develop_time = module.load_function("kernels/develop_time.cu").unwrap();
+    let calc_norm = module.load_function("kernels/norm.cu").unwrap();
+    let update_f0 = module.load_function("kernels/update_f0.cu").unwrap();
+    let amplitudes_to_probabilities = module.load_function("kernels/amplitudes_to_probabilities.cu").unwrap();
 
     let f0_dev = stream.clone_htod(&f0).unwrap();
     let f_temp_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
