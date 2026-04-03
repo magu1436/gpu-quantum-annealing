@@ -21,7 +21,6 @@ pub fn excute() -> Vec<Complex64>{
     let threads_x = 2u32;
 
     let n = 2u64.pow(bit_amount as u32) as usize;
-    let norm = 0.0f64;
 
     // 対角成分
     let mut diag = vec![0.0; n as usize];
@@ -45,6 +44,7 @@ pub fn excute() -> Vec<Complex64>{
     let f0_dev = stream.clone_htod(&f0).unwrap();
     let f_temp_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
+    let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
 
     let cfg = create_launch_config(n, threads_x);
 
@@ -61,21 +61,26 @@ pub fn excute() -> Vec<Complex64>{
                 .arg(&a)
                 .arg(&b)
                 .arg(&diag_dev)
+                .arg(&n)
                 .arg(&f_temp_dev)
                 .launch(cfg)
                 .unwrap();
 
+            stream.memcpy_htod(&[0.0], &mut sum).unwrap();
+
             stream
                 .launch_builder(&calc_norm)
                 .arg(&f_temp_dev)
-                .arg(&norm)
+                .arg(&sum)
+                .arg(&n)
                 .launch(cfg)
                 .unwrap();
 
             stream
                 .launch_builder(&update_f0)
                 .arg(&f_temp_dev)
-                .arg(&norm)
+                .arg(&sum)
+                .arg(&n)
                 .arg(&f0_dev)
                 .launch(cfg)
                 .unwrap();
