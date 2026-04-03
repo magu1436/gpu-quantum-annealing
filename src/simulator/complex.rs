@@ -8,5 +8,11 @@ pub struct Complex64 {
     pub im: f64,
 }
 
+impl Complex64 {
+    pub fn new(re: f64, im: f64) -> Self {
+        Self { re, im }
+    }
+}
+
 unsafe impl DeviceRepr for Complex64 {}
 unsafe impl ValidAsZeroBits for Complex64 {}
