@@ -29,6 +29,7 @@ pub fn excute() -> Vec<f64>{
     }
 
     let f0 = vec![Complex64::new(1.0f64 / (n as f64).sqrt(), 0.0); n];
+    let t_temp = vec![Complex64::new(0.0, 0.0); n*n];
 
     
     let ptx = compile_ptx("kernels/execute.cu");
@@ -36,11 +37,13 @@ pub fn excute() -> Vec<f64>{
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx).unwrap();
 
+    let create_t = module.load_function("kernels/create_t.cu").unwrap();
     let develop_time = module.load_function("kernels/develop_time.cu").unwrap();
     let calc_norm = module.load_function("kernels/norm.cu").unwrap();
     let update_f0 = module.load_function("kernels/update_f0.cu").unwrap();
 
     let f0_dev = stream.clone_htod(&f0).unwrap();
+    let t_temp_dev = stream.clone_htod(&t_temp).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
     let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
 
@@ -54,7 +57,20 @@ pub fn excute() -> Vec<f64>{
 
         unsafe  {
             stream
+                .launch_builder(&create_t)
+                .arg(&f0_dev)
+                .arg(&a)
+                .arg(&b)
+                .arg(&dt)
+                .arg(&diag_dev)
+                .arg(&n)
+                .arg(&t_temp_dev)
+                .launch(cfg)
+                .unwrap();
+
+            stream
                 .launch_builder(&develop_time)
+                .arg(&t)
                 .arg(&f0_dev)
                 .arg(&a)
                 .arg(&b)
