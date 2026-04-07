@@ -55,7 +55,6 @@ pub fn excute() -> Vec<f64>{
         let b = b0 * (1.0 - a);
 
         unsafe  {
-            stream.memcpy_htod(&vec![Complex64::default(); n], &mut f1_dev).unwrap();
 
             match stream
                 .launch_builder(&develop_time)
@@ -78,13 +77,12 @@ pub fn excute() -> Vec<f64>{
                 Ok(_) => {},
                 Err(e) => panic!("Memcpy error: {}", e)
             };
-
             match stream.memcpy_dtod(&f1_dev, &mut f0_dev) {
                 Ok(_) => {},
                 Err(e) => panic!("Memcpy error: {}", e)
             }
-
             stream.synchronize().unwrap();
+            stream.memcpy_htod(&vec![Complex64::default(); n], &mut f1_dev).unwrap();
 
             match stream
                 .launch_builder(&calc_norm)
