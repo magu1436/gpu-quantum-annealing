@@ -77,12 +77,10 @@ pub fn excute() -> Vec<f64>{
                 let t_ = stream.clone_dtoh(&t_temp_dev).unwrap();
                 for y in 0..n {
                     for x in 0..n {
-                        let z = t_[x * n + y];
+                        let z = t_[y * n + x];
                         print!("({}, {})", z.re, z.im);
-                        if x % n == 0  {
-                            print!("\n");
-                        }
                     }
+                    println!();
                 }
             }
 
@@ -152,7 +150,7 @@ pub fn excute() -> Vec<f64>{
 }
 
 fn objective_function(idx: usize) -> f64 {
-    const NUMS: [i32; 5] = [1, 2, 3, 4, 5];
+    const NUMS: [i32; 5] = [1, 2, 3, 4, 6];
     let mut result = 0.0;
 
     let bit = |decimal: u32, idx: usize| -> i32 {

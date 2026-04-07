@@ -13,10 +13,10 @@ void create_t(double a, double b, double dt, double* diag, int n, Complex64* t) 
     Complex64 z;
     if (x == y) {
         z.re = 1.0;
-        z.im = -0.5 * dt * a * diag[x];
+        z.im = -0.5 * dt * (b + a * diag[x]);
         t[idx] = z;
     } else if (is_diff_by_one_bit(x, y)) {
-        z.re = 1.0;
+        z.re = 0.0;
         z.im = 0.5 * dt * b;
         t[idx] = z;
     } else {
