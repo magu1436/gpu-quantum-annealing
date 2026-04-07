@@ -3,7 +3,7 @@
 #include "bit.cuh"
 
 extern "C" __global__
-void create_t(Complex64* f0, double a, double b, double dt, double* diag, int n, Complex64* t) {
+void create_t(double a, double b, double dt, double* diag, int n, Complex64* t) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 

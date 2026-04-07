@@ -61,7 +61,6 @@ pub fn excute() -> Vec<f64>{
         unsafe  {
             match stream
                 .launch_builder(&create_t)
-                .arg(&f0_dev)
                 .arg(&a)
                 .arg(&b)
                 .arg(&dt)
