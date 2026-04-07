@@ -1,6 +1,6 @@
 use cudarc::driver::{CudaContext, PushKernelArg};
 
-use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, launch_config::create_launch_config};
+use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, launch_config::{KernelLayout, create_launch_config}};
 
 
 
@@ -27,7 +27,7 @@ pub fn execute_scalar_multiple() -> Vec<Complex64>{
 
     let threads_x = 2u32;
 
-    let cfg = create_launch_config(N, threads_x);
+    let cfg = create_launch_config(N, threads_x, KernelLayout::Matrix2D);
 
     unsafe  {
         stream

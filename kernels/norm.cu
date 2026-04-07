@@ -2,13 +2,11 @@
 # include "complex_ops.cuh"
 
 extern "C" __global__
-void norm(const Complex64* array, float* sum, int n) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
+void add_to_calc_norm(const Complex64* array, double* sum, int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    int idx = y * n + x;
-    if (x < n && y < n) {
+    if (idx < n) {
         double val = array[idx].re * array[idx].re + array[idx].im * array[idx].im;
-        atmomicAdd(sum, val);
+        atomicAdd(sum, val);
     }
 }

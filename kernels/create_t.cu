@@ -14,14 +14,14 @@ void create_t(Complex64* f0, double a, double b, double dt, double* diag, int n,
     if (x == y) {
         z.re = 1.0;
         z.im = -0.5 * dt * a * diag[x];
-        t[idx] = z
+        t[idx] = z;
     } else if (is_diff_by_one_bit(x, y)) {
         z.re = 1.0;
         z.im = 0.5 * dt * b;
-        t[idx] = z
+        t[idx] = z;
     } else {
         z.re = 0.0;
         z.im = 0.0;
-        t[idx] = z
+        t[idx] = z;
     }
 }
