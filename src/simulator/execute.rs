@@ -70,7 +70,6 @@ pub fn excute() -> Vec<f64>{
                     Ok(_) => {},
                     Err(e) => panic!("Develop time error: {}", e)
                 };
-            
             stream.synchronize().unwrap();
 
             match stream.memcpy_htod(&[0.0], &mut sum) {
@@ -93,7 +92,6 @@ pub fn excute() -> Vec<f64>{
                     Ok(_) => {},
                     Err(e) => panic!("Calc norm error: {}", e)
                 };
-            
             stream.synchronize().unwrap();
 
             match stream
@@ -105,7 +103,6 @@ pub fn excute() -> Vec<f64>{
                     Ok(_) => {},
                     Err(e) => panic!("Update f0 error: {}", e)
                 };
-            
             stream.synchronize().unwrap();
         }
     }
