@@ -22,6 +22,6 @@ fn main() {
         result
     };
 
-    let r = simulator::execute::excute(BIT_COUNT, objective_function);
+    let r = simulator::execute::excute(BIT_COUNT, objective_function, simulator::config::AnnealingConfig::default());
     println!("{:?}", r);
 }

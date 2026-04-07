@@ -2,10 +2,10 @@ use std::time;
 
 use cudarc::driver::{CudaContext, PushKernelArg};
 
-use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, launch_config::{KernelLayout, create_launch_config}};
+use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, config::AnnealingConfig, launch_config::{KernelLayout, create_launch_config}};
 
 
-pub fn excute<F>(bit_count: usize, objective_function: F) -> Vec<f64>
+pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> Vec<f64>
 where
     F: Fn(usize) -> f64,
 {
@@ -14,12 +14,7 @@ where
     print!("\nExecuting quantum annealing simulation...\n");
 
     // 定数
-    let dt = 1e-3;
-    let tau = 20.0;
-    let step = (tau / dt) as u32;
-    let b0 = 10.0;
-    let threads_x = 2u32;
-
+    let step = (config.tau / config.dt) as u32;
     let n = 2u64.pow(bit_count as u32) as usize;
 
     // 対角成分
@@ -45,13 +40,13 @@ where
     let diag_dev = stream.clone_htod(&diag).unwrap();
     let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
 
-    let cfg_for_vector = create_launch_config(n, threads_x, KernelLayout::Vector2D);
+    let cfg_for_vector = create_launch_config(n, config.threads_x, KernelLayout::Vector2D);
 
     let mut t: f64;
     for i in 0..step {
-        t = (i as f64) * dt;
-        let a = t / tau;
-        let b = b0 * (1.0 - a);
+        t = (i as f64) * config.dt;
+        let a = t / config.tau;
+        let b = config.b0 * (1.0 - a);
 
         unsafe  {
 
@@ -59,7 +54,7 @@ where
                 .launch_builder(&develop_time)
                 .arg(&a)
                 .arg(&b)
-                .arg(&dt)
+                .arg(&config.dt)
                 .arg(&diag_dev)
                 .arg(&f0_dev)
                 .arg(&n)
