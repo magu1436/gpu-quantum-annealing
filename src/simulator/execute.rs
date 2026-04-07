@@ -39,7 +39,7 @@ pub fn excute() -> Vec<f64>{
     let module = ctx.load_module(ptx).unwrap();
 
     let create_t = module.load_function("create_t").unwrap();
-    let develop_time = module.load_function("develop_time").unwrap();
+    let develop_time = module.load_function("develop_time_latest").unwrap();
     let calc_norm = module.load_function("add_to_calc_norm").unwrap();
     let update_f0 = module.load_function("update_f0").unwrap();
 
@@ -59,40 +59,19 @@ pub fn excute() -> Vec<f64>{
         let b = b0 * (1.0 - a);
 
         unsafe  {
-            match stream
-                .launch_builder(&create_t)
-                .arg(&a)
-                .arg(&b)
-                .arg(&dt)
-                .arg(&diag_dev)
-                .arg(&n)
-                .arg(&t_temp_dev)
-                .launch(cfg_for_matrix) {
-                    Ok(_) => {},
-                    Err(e) => panic!("Create_t error: {}", e)
-                };
-            stream.synchronize().unwrap();
-
-            if (i == 1) {
-                let t_ = stream.clone_dtoh(&t_temp_dev).unwrap();
-                for y in 0..n {
-                    for x in 0..n {
-                        let z = t_[y * n + x];
-                        print!("({}, {})", z.re, z.im);
-                    }
-                    println!();
-                }
-            }
-
             stream.memcpy_htod(&vec![Complex64::default(); n], &mut f1_dev).unwrap();
 
             match stream
                 .launch_builder(&develop_time)
-                .arg(&t_temp_dev)
+                .arg(&a)
+                .arg(&b)
+                .arg(&dt)
+                .arg(&diag_dev)
                 .arg(&f0_dev)
                 .arg(&n)
+                .arg(&bit_amount)
                 .arg(&f1_dev)
-                .launch(cfg_for_matrix) {
+                .launch(cfg_for_vector) {
                     Ok(_) => {},
                     Err(e) => panic!("Develop time error: {}", e)
                 };
