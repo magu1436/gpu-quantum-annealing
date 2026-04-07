@@ -30,7 +30,6 @@ pub fn excute() -> Vec<f64>{
     println!("diag: {:?}\n", diag);
 
     let f0 = vec![Complex64::new(1.0f64 / (n as f64).sqrt(), 0.0); n];
-    let t_temp = vec![Complex64::new(0.0, 0.0); n*n];
 
     
     let ptx = compile_ptx("kernels/modules.cu");
@@ -38,18 +37,15 @@ pub fn excute() -> Vec<f64>{
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx).unwrap();
 
-    let create_t = module.load_function("create_t").unwrap();
-    let develop_time = module.load_function("develop_time_latest").unwrap();
+    let develop_time = module.load_function("develop_time").unwrap();
     let calc_norm = module.load_function("add_to_calc_norm").unwrap();
     let update_f0 = module.load_function("update_f0").unwrap();
 
     let mut f0_dev = stream.clone_htod(&f0).unwrap();
     let mut f1_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
-    let t_temp_dev = stream.clone_htod(&t_temp).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
     let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
 
-    let cfg_for_matrix = create_launch_config(n, threads_x, KernelLayout::Matrix2D);
     let cfg_for_vector = create_launch_config(n, threads_x, KernelLayout::Vector2D);
 
     let mut t: f64;
