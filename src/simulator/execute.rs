@@ -69,10 +69,7 @@ where
                 Ok(_) => {},
                 Err(e) => panic!("Memcpy error: {}", e)
             };
-            match stream.memcpy_dtod(&f1_dev, &mut f0_dev) {
-                Ok(_) => {},
-                Err(e) => panic!("Memcpy error: {}", e)
-            }
+            std::mem::swap(&mut f0_dev, &mut f1_dev);
 
             match stream
                 .launch_builder(&calc_norm)
@@ -173,10 +170,7 @@ where
                 Ok(_) => {},
                 Err(e) => panic!("Memcpy error: {}", e)
             };
-            match stream.memcpy_dtod(&f1_dev, &mut f0_dev) {
-                Ok(_) => {},
-                Err(e) => panic!("Memcpy error: {}", e)
-            }
+            std::mem::swap(&mut f0_dev, &mut f1_dev);
 
             match stream
                 .launch_builder(&calc_norm)

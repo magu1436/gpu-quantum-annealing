@@ -28,6 +28,6 @@ fn main() {
         ..Default::default()
     };
 
-    let r = simulator::execute::excute_warp(bit_count, objective_function, cfg);
+    let r = simulator::execute::excute(bit_count, objective_function, cfg);
     println!("{:?}", r);
 }
