@@ -106,6 +106,7 @@ where
         elapsed
     );
 
+    stream.synchronize().unwrap();
     let result = stream.clone_dtoh(&f0_dev).unwrap();
     let prob = amplitudes_to_probabilities(result);
     prob
