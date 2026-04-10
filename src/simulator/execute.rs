@@ -48,6 +48,8 @@ where
         true => create_launch_config(n, config.threads_x, KernelLayout::Vector2D),
         false => create_launch_config(n, config.threads_x, KernelLayout::Warp),
     };
+    let mut cfg_for_norm = create_launch_config(n, config.threads_x, KernelLayout::Vector2D);
+    cfg_for_norm.shared_mem_bytes = config.threads_x * (std::mem::size_of::<f64>() as u32);
 
     let mut t: f64;
     for i in 0..step {
@@ -83,7 +85,7 @@ where
                 .arg(&f0_dev)
                 .arg(&sum)
                 .arg(&n)
-                .launch(cfg_for_vector) {
+                .launch(cfg_for_norm) {
                     Ok(_) => {},
                     Err(e) => panic!("Calc norm error: {}", e)
                 };
