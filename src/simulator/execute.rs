@@ -2,7 +2,7 @@ use std::time;
 
 use cudarc::{
     cublas::{
-        result, safe::CudaBlas, sys::{self, cublasDznrm2_v2, cublasStatus_t, cublasZdscal_v2}
+        safe::CudaBlas, sys::{self, cublasDznrm2_v2, cublasStatus_t, cublasZdscal_v2}
     },
     driver::{
         CudaContext, CudaSlice, CudaStream, DevicePtrMut, PushKernelArg
