@@ -41,7 +41,7 @@ where
     let mut f0_dev = stream.clone_htod(&f0).unwrap();
     let mut f1_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
     let diag_dev = stream.clone_htod(&diag).unwrap();
-    let mut sum = stream.alloc_zeros::<f64>(1).unwrap();
+    let sum = stream.alloc_zeros::<f64>(1).unwrap();
 
     let cfg_for_vector = create_launch_config(n, config.threads_x, KernelLayout::Vector2D);
     let cfg_for_develop_time = match config.threads_x < 32 {
