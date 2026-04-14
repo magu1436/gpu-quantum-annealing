@@ -1,13 +1,6 @@
 use std::time;
 
-use cudarc::{
-    cublas::{
-        safe::CudaBlas, sys::{self, cublasDznrm2_v2, cublasStatus_t, cublasZdscal_v2}
-    },
-    driver::{
-        CudaContext, CudaSlice, CudaStream, DevicePtrMut, PushKernelArg
-    },
-};
+use cudarc::driver::{CudaContext, PushKernelArg};
 
 use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, config::AnnealingConfig, launch_config::{KernelLayout, create_launch_config}};
 
@@ -37,9 +30,6 @@ where
     let ctx = CudaContext::new(0).unwrap();
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx).unwrap();
-
-    let blas_handle = CudaBlas::new(stream.clone()).unwrap();
-    blas_handle.set_pointer_mode(sys::cublasPointerMode_t::CUBLAS_POINTER_MODE_HOST).unwrap();
 
     let develop_time = match config.threads_x < 32 {
         true => module.load_function("develop_time").unwrap(),
@@ -131,51 +121,4 @@ fn amplitudes_to_probabilities(amplitudes: Vec<Complex64>) -> Vec<f64> {
         probabilities[i] = v.abs().powi(2);
     }
     probabilities
-}
-
-unsafe fn normalize(
-    blas: &CudaBlas,
-    stream: &std::sync::Arc<CudaStream>,
-    x: &mut CudaSlice<Complex64>,
-) -> Result<(), String> {
-    
-    // ベクトルの要素数
-    let n = x.len() as i32;
-
-
-    // x_ptr は x の先頭アドレス
-    let (x_ptr, _sync) = x.device_ptr_mut(stream);
-    let mut norm = 0.0f64;
-
-    // ノルムを計算
-    let status = unsafe {
-        cublasDznrm2_v2(
-            *blas.handle(),
-            n,
-            x_ptr as *const sys::cuDoubleComplex,
-            1,
-            (&mut norm) as *mut f64,
-        )
-    };
-    if status != cublasStatus_t::CUBLAS_STATUS_SUCCESS {
-        return Err("cublasDznrm2_v2 failed.".to_string());
-    }
-
-    let inv_norm = 1.0 / norm;
-
-    // ノルムの逆数を用いて正規化
-    let status = unsafe {
-        cublasZdscal_v2(
-            *blas.handle(),
-            n,
-            &inv_norm as *const f64,
-            x_ptr as *mut sys::cuDoubleComplex,
-            1
-        )
-    };
-    if status != cublasStatus_t::CUBLAS_STATUS_SUCCESS {
-        return Err("cublasZdscal_v2 failed.".to_string());
-    };
-
-    Ok(())
 }
