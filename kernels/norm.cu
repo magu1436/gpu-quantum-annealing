@@ -6,11 +6,11 @@ void add_to_calc_norm(const Complex64* array, double* sum, int n) {
     extern __shared__ double sdata[];
 
     const unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx == 0) *sum = 0.0;
 
     double val = 0.0;
 
     if (idx < n) val = array[idx].re * array[idx].re + array[idx].im * array[idx].im;
-
     sdata[threadIdx.x] = val;
     __syncthreads();
 

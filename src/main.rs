@@ -2,7 +2,7 @@ mod simulator;
 
 fn main() {
 
-    let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let nums = [1, 2, 3, 4];
     let bit_count: usize = nums.len();
 
     let bit = |decimal: u32, idx: usize| -> i32 {

@@ -73,11 +73,7 @@ where
                     Ok(_) => {},
                     Err(e) => panic!("Develop time error: {}", e)
                 };
-
-            match stream.memcpy_htod(&[0.0], &mut sum) {
-                Ok(_) => {},
-                Err(e) => panic!("Memcpy error: {}", e)
-            };
+                
             std::mem::swap(&mut f0_dev, &mut f1_dev);
 
             match stream
