@@ -87,6 +87,7 @@ pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
                 .kernel_process_err("update f0 kernel")?;
         }
     }
+    stream.synchronize()?;
 
     let elapsed = start_time.elapsed();
     print!(
@@ -94,7 +95,6 @@ pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
         elapsed
     );
 
-    stream.synchronize()?;
     let result = stream.clone_dtoh(&f0_dev)?;
     let prob = amplitudes_to_probabilities(result);
     Ok(prob)
