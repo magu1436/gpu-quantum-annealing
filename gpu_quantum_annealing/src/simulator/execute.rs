@@ -2,13 +2,12 @@ use std::time;
 
 use cudarc::driver::{CudaContext, PushKernelArg};
 
-use crate::simulator::{
+use crate::{config::AnnealingConfig, simulator::{
     compile_ptx::compile_ptx,
     complex::Complex64,
-    config::AnnealingConfig,
     launch_config::{KernelLayout, create_launch_config},
     qa_sim_error::{ResultExt, SimResult},
-};
+}};
 
 pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> SimResult<Vec<f64>>
 where
