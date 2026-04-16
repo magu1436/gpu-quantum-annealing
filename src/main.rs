@@ -29,5 +29,8 @@ fn main() {
     };
 
     let r = simulator::execute::excute(bit_count, objective_function, cfg);
-    println!("{:?}", r);
+    match r {
+        Ok(prob) => println!("{:?}", prob),
+        Err(e) => println!("{:?}", e),
+    };
 }

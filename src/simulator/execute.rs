@@ -2,10 +2,15 @@ use std::time;
 
 use cudarc::driver::{CudaContext, PushKernelArg};
 
-use crate::simulator::{compile_ptx::compile_ptx, complex::Complex64, config::AnnealingConfig, launch_config::{KernelLayout, create_launch_config}};
+use crate::simulator::{
+    compile_ptx::compile_ptx,
+    complex::Complex64,
+    config::AnnealingConfig,
+    launch_config::{KernelLayout, create_launch_config},
+    qa_sim_error::{SimResult, ResultExt},
+};
 
-
-pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> Vec<f64>
+pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> SimResult<Vec<f64>>
 where
     F: Fn(usize) -> f64,
 {
@@ -27,21 +32,21 @@ where
 
     
     let ptx = compile_ptx("kernels/modules.cu");
-    let ctx = CudaContext::new(0).unwrap();
+    let ctx = CudaContext::new(0)?;
     let stream = ctx.default_stream();
-    let module = ctx.load_module(ptx).unwrap();
+    let module = ctx.load_module(ptx)?;
 
     let develop_time = match config.threads_x < 32 {
-        true => module.load_function("develop_time").unwrap(),
-        false => module.load_function("develop_time_warp").unwrap(),
+        true => module.load_function("develop_time").kernel_not_found_err("develop_time")?,
+        false => module.load_function("develop_time_warp").kernel_not_found_err("develop_time_warp")?,
     };
-    let calc_norm = module.load_function("add_to_calc_norm").unwrap();
-    let update_f0 = module.load_function("update_f0").unwrap();
+    let calc_norm = module.load_function("add_to_calc_norm").kernel_not_found_err("add_to_calc_norm")?;
+    let update_f0 = module.load_function("update_f0").kernel_not_found_err("update_f0")?;
 
-    let mut f0_dev = stream.clone_htod(&f0).unwrap();
-    let mut f1_dev = stream.alloc_zeros::<Complex64>(n).unwrap();
-    let diag_dev = stream.clone_htod(&diag).unwrap();
-    let sum = stream.alloc_zeros::<f64>(1).unwrap();
+    let mut f0_dev = stream.clone_htod(&f0)?;
+    let mut f1_dev = stream.alloc_zeros::<Complex64>(n)?;
+    let diag_dev = stream.clone_htod(&diag)?;
+    let sum = stream.alloc_zeros::<f64>(1)?;
 
     let cfg_for_vector = create_launch_config(n, config.threads_x, KernelLayout::Vector2D);
     let cfg_for_develop_time = match config.threads_x < 32 {
@@ -59,7 +64,7 @@ where
 
         unsafe  {
 
-            match stream
+            stream
                 .launch_builder(&develop_time)
                 .arg(&a)
                 .arg(&b)
@@ -69,32 +74,26 @@ where
                 .arg(&n)
                 .arg(&(bit_count as u32))
                 .arg(&f1_dev)
-                .launch(cfg_for_develop_time) {
-                    Ok(_) => {},
-                    Err(e) => panic!("Develop time error: {}", e)
-                };
+                .launch(cfg_for_develop_time)
+                .kernel_process_err("develop time kernel")?;
                 
             std::mem::swap(&mut f0_dev, &mut f1_dev);
 
-            match stream
+            stream
                 .launch_builder(&calc_norm)
                 .arg(&f0_dev)
                 .arg(&sum)
                 .arg(&n)
-                .launch(cfg_for_norm) {
-                    Ok(_) => {},
-                    Err(e) => panic!("Calc norm error: {}", e)
-                };
+                .launch(cfg_for_norm)
+                .kernel_process_err("calc norm kernel")?;
 
-            match stream
+            stream
                 .launch_builder(&update_f0)
                 .arg(&f0_dev)
                 .arg(&sum)
                 .arg(&n)
-                .launch(cfg_for_vector) {
-                    Ok(_) => {},
-                    Err(e) => panic!("Update f0 error: {}", e)
-                };
+                .launch(cfg_for_vector)
+                .kernel_process_err("update f0 kernel")?;
         }
     }
 
@@ -104,10 +103,10 @@ where
         elapsed
     );
 
-    stream.synchronize().unwrap();
-    let result = stream.clone_dtoh(&f0_dev).unwrap();
+    stream.synchronize()?;
+    let result = stream.clone_dtoh(&f0_dev)?;
     let prob = amplitudes_to_probabilities(result);
-    prob
+    Ok(prob)
 
 }
 
