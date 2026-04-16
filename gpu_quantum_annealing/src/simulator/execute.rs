@@ -7,7 +7,7 @@ use crate::simulator::{
     complex::Complex64,
     config::AnnealingConfig,
     launch_config::{KernelLayout, create_launch_config},
-    qa_sim_error::{SimResult, ResultExt},
+    qa_sim_error::{ResultExt, SimResult},
 };
 
 pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> SimResult<Vec<f64>>
@@ -30,8 +30,7 @@ where
 
     let f0 = vec![Complex64::new(1.0f64 / (n as f64).sqrt(), 0.0); n];
 
-    
-    let ptx = compile_ptx("kernels/modules.cu");
+    let ptx = compile_ptx("modules.cu")?;
     let ctx = CudaContext::new(0)?;
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx)?;

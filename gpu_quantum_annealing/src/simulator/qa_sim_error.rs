@@ -1,8 +1,18 @@
-use cudarc::driver::DriverError;
+use cudarc::{driver::DriverError, nvrtc::CompileError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum QASimError {
+
+    #[error("kernel file not found: {file_path} \n {err} ")]
+    KernelFileNotFound {
+        file_path: String,
+        #[source]
+        err: std::io::Error
+    },
+
+    #[error("compile ptx failed. \n {0}")]
+    CompilePtxFailed(#[from] CompileError),
 
     #[error("Kernel not found: {kernel} \n{e} ")]
     KernelNotFound {

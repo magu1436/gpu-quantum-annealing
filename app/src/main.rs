@@ -1,8 +1,11 @@
-mod simulator;
+use gpu_quantum_annealing::{
+    AnnealingConfig,
+    execute::excute,
+};
 
 fn main() {
 
-    let nums = [1, 2, 3, 4];
+    let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let bit_count: usize = nums.len();
 
     let bit = |decimal: u32, idx: usize| -> i32 {
@@ -22,15 +25,16 @@ fn main() {
         result
     };
 
-    let cfg = simulator::config::AnnealingConfig {
-        tau: 100.0,
+    let cfg = AnnealingConfig {
+        tau: 1.0,
+        dt: 1.0e-5,
         threads_x: 128,
         ..Default::default()
     };
 
-    let r = simulator::execute::excute(bit_count, objective_function, cfg);
+    let r = excute(bit_count, objective_function, cfg);
     match r {
         Ok(prob) => println!("{:?}", prob),
-        Err(e) => println!("{:?}", e),
+        Err(e) => panic!("{}", e),
     };
 }
