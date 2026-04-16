@@ -9,9 +9,7 @@ use crate::{config::{AnnealingConfig, DevelopTimeMethod}, simulator::{
     qa_sim_error::{ResultExt, SimResult},
 }};
 
-pub fn excute<F>(bit_count: usize, objective_function: F, config: AnnealingConfig) -> SimResult<Vec<f64>>
-where
-    F: Fn(usize) -> f64,
+pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
 {
 
     let start_time = time::Instant::now();
@@ -19,13 +17,8 @@ where
 
     // 定数
     let step = (config.tau / config.dt) as u32;
-    let n = 2u64.pow(bit_count as u32) as usize;
-
-    // 対角成分
-    let mut diag = vec![0.0; n as usize];
-    for i in 0..(n as usize) {
-        diag[i] = objective_function(i);
-    }
+    let n = diag.len();
+    let bit_count = (n as f64).log2() as u32;
 
     let f0 = vec![Complex64::new(1.0f64 / (n as f64).sqrt(), 0.0); n];
 
@@ -43,7 +36,7 @@ where
 
     let mut f0_dev = stream.clone_htod(&f0)?;
     let mut f1_dev = stream.alloc_zeros::<Complex64>(n)?;
-    let diag_dev = stream.clone_htod(&diag)?;
+    let diag_dev = stream.clone_htod(diag)?;
     let sum = stream.alloc_zeros::<f64>(1)?;
 
     let cfg_for_vector = create_launch_config(n, config.threads_x, KernelLayout::Vector2D);

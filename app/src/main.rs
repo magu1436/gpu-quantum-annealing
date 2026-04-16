@@ -1,11 +1,11 @@
 use gpu_quantum_annealing::{
     AnnealingConfig,
-    execute::excute,
+    execute::execute,
 };
 
 fn main() {
 
-    let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let nums = [1, 2, 3, 4];
     let bit_count: usize = nums.len();
 
     let bit = |decimal: u32, idx: usize| -> i32 {
@@ -25,14 +25,19 @@ fn main() {
         result
     };
 
+    let mut diag = vec![0.0f64; 2u64.pow(bit_count as u32) as usize];
+    for i in 0..2u64.pow(bit_count as u32) as usize {
+        diag[i] = objective_function(i);
+    }
+
     let cfg = AnnealingConfig {
-        tau: 1.0,
-        dt: 1.0e-5,
         threads_x: 128,
         ..Default::default()
     };
 
-    let r = excute(bit_count, objective_function, cfg);
+    println!("{:?}", diag);
+
+    let r = execute(&diag, cfg);
     match r {
         Ok(prob) => println!("{:?}", prob),
         Err(e) => panic!("{}", e),
