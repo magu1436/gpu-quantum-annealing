@@ -1,3 +1,5 @@
+use crate::config::DevelopTimeMethod;
+
 /// 量子アニーリングシミュレーションの設定を表す。
 /// 
 /// Exmple:
@@ -17,6 +19,8 @@ pub struct AnnealingConfig {
     pub b0: f64,
     /// スレッド数
     pub threads_x: u32,
+    /// 時間発展関数の指定
+    pub develop_time_method: DevelopTimeMethod,
 }
 
 impl Default for AnnealingConfig {
@@ -26,6 +30,7 @@ impl Default for AnnealingConfig {
             tau: 20.0,
             b0: 10.0,
             threads_x: 2,
+            develop_time_method: DevelopTimeMethod::Default,
         }
     }
 }

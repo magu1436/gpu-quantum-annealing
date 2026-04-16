@@ -2,7 +2,7 @@ use std::time;
 
 use cudarc::driver::{CudaContext, PushKernelArg};
 
-use crate::{config::AnnealingConfig, simulator::{
+use crate::{config::{AnnealingConfig, DevelopTimeMethod}, simulator::{
     compile_ptx::compile_ptx,
     complex::Complex64,
     launch_config::{KernelLayout, create_launch_config},
@@ -34,7 +34,7 @@ where
     let stream = ctx.default_stream();
     let module = ctx.load_module(ptx)?;
 
-    let develop_time = match config.threads_x < 32 {
+    let develop_time = match use_warp(&config) {
         true => module.load_function("develop_time").kernel_not_found_err("develop_time")?,
         false => module.load_function("develop_time_warp").kernel_not_found_err("develop_time_warp")?,
     };
@@ -106,6 +106,14 @@ where
     let prob = amplitudes_to_probabilities(result);
     Ok(prob)
 
+}
+
+fn use_warp(config: &AnnealingConfig) -> bool {
+    match config.develop_time_method {
+        DevelopTimeMethod::DevelopTime => false,
+        DevelopTimeMethod::DevelopTimeWarp => true,
+        DevelopTimeMethod::Default => config.threads_x < 32
+    }
 }
 
 fn amplitudes_to_probabilities(amplitudes: Vec<Complex64>) -> Vec<f64> {
