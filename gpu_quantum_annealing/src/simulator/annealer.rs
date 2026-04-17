@@ -116,6 +116,7 @@ impl Annealer {
                 .arg(&a)
                 .arg(&b)
                 .arg(&self.config.dt)
+                .arg(&self.diag_dev)
                 .arg(&self.f0_dev)
                 .arg(&self.n)
                 .arg(&self.bit_count)
