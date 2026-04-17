@@ -27,26 +27,40 @@ use crate::{
 };
 
 
-
+/// GPU上で量子アニーリングシミュレーションを実行するワーカークラス
 pub struct Annealer {
+    /// アニーリングシミュレーションの設定
     pub config: AnnealingConfig,
 
+    /// 状態ベクトルの大きさ
     pub n: u32,
+    /// 量子ビット数
     pub bit_count: u32,
 
+    /// GPU上の状態ベクトル
     pub f0_dev: CudaSlice<Complex64>,
+    /// GPU上の状態ベクトルの仮置場
     pub f1_dev: CudaSlice<Complex64>,
+    /// GPU上の対角行列
     pub diag_dev: CudaSlice<f64>,
+    /// GPU上の状態ベクトルのノルム
     pub norm_dev: CudaSlice<f64>,
 
+    /// GPU上のストリーム
     pub stream: Arc<CudaStream>,
 
+    /// ベクトルを扱うカーネルが使用するコンフィグ
     pub cfg_for_vec: LaunchConfig,
+    /// 時間発展カーネルが使用するコンフィグ
     pub cfg_for_develop_time: LaunchConfig,
+    /// ノルムを計算するカーネルが使用するコンフィグ
     pub cfg_for_norm: LaunchConfig,
 
+    /// 時間発展カーネル
     pub develop_time_func: CudaFunction,
+    /// ノルムを計算するカーネル
     pub calc_norm_func: CudaFunction,
+    /// 事前に計算された状態ベクトルを更新するカーネル
     pub update_f0_func: CudaFunction,
 }
 
@@ -102,6 +116,7 @@ impl Annealer {
 
     }
 
+    /// 時間発展を実行する
     pub unsafe fn develop_time(&self, &a: &f64, &b: &f64) -> SimResult<()>{
         unsafe {
             self.stream
@@ -120,10 +135,12 @@ impl Annealer {
         Ok(())
     }
 
+    /// 状態ベクトルを入れ替える
     pub fn swap(&mut self) {
         std::mem::swap(&mut self.f0_dev, &mut self.f1_dev);
     }
 
+    /// ノルムを計算する
     pub unsafe fn calc_norm(&self) -> SimResult<()> {
         unsafe {
             self.stream
@@ -137,6 +154,7 @@ impl Annealer {
         Ok(())
     }
 
+    /// 事前に計算されたノルムを用いて状態ベクトルを更新する
     pub unsafe fn update_f0(&self) -> SimResult<()> {
         unsafe {
             self.stream
