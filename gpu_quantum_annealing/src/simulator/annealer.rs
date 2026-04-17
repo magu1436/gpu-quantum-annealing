@@ -33,16 +33,12 @@ pub struct Annealer {
 
     pub n: u32,
     pub bit_count: u32,
-    
-    pub f0_host: Vec<Complex64>,
-    pub diag_host: Vec<f64>,
 
     pub f0_dev: CudaSlice<Complex64>,
     pub f1_dev: CudaSlice<Complex64>,
     pub diag_dev: CudaSlice<f64>,
     pub norm_dev: CudaSlice<f64>,
 
-    pub ctx: Arc<CudaContext>,
     pub stream: Arc<CudaStream>,
 
     pub cfg_for_vec: LaunchConfig,
@@ -90,13 +86,10 @@ impl Annealer {
             config: config.clone(),
             n,
             bit_count,
-            f0_host,
-            diag_host: diag.clone(),
             f0_dev,
             f1_dev,
             diag_dev,
             norm_dev,
-            ctx,
             stream,
             cfg_for_vec,
             cfg_for_develop_time,

@@ -1,8 +1,14 @@
 use std::time;
 
-use crate::{config::{AnnealingConfig, DevelopTimeMethod}, simulator::{
-    annealer::Annealer, compile_ptx::compile_ptx, complex::Complex64, launch_config::{KernelLayout, create_launch_config}, qa_sim_error::{ResultExt, SimResult}
-}};
+use crate::{
+    config::AnnealingConfig,
+    simulator::{
+        annealer::Annealer,
+        compile_ptx::compile_ptx,
+        complex::Complex64,
+        qa_sim_error::SimResult,
+    }
+};
 
 pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
 {
@@ -42,14 +48,6 @@ pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
     let prob = amplitudes_to_probabilities(result);
     Ok(prob)
 
-}
-
-fn use_warp(config: &AnnealingConfig) -> bool {
-    match config.develop_time_method {
-        DevelopTimeMethod::DevelopTime => false,
-        DevelopTimeMethod::DevelopTimeWarp => true,
-        DevelopTimeMethod::Default => config.threads_x < 32
-    }
 }
 
 fn amplitudes_to_probabilities(amplitudes: Vec<Complex64>) -> Vec<f64> {
