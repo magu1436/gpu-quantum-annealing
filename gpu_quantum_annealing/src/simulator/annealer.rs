@@ -1,14 +1,30 @@
 use std::sync::Arc;
 
-use cudarc::{driver::{
-    CudaContext,
-    CudaFunction,
-    CudaSlice,
-    CudaStream,
-    LaunchConfig
-}, nvrtc::Ptx};
+use cudarc::{
+    driver::{
+        CudaContext,
+        CudaFunction,
+        CudaSlice,
+        CudaStream,
+        LaunchConfig,
+        PushKernelArg
+    },
+    nvrtc::Ptx
+};
 
-use crate::{AnnealingConfig, SimResult, simulator::{complex::Complex64, launch_config::{KernelLayout, create_launch_config}}};
+use crate::{
+    AnnealingConfig,
+    SimResult,
+    config::DevelopTimeMethod,
+    simulator::{
+        complex::Complex64,
+        launch_config::{
+            KernelLayout,
+            create_launch_config,
+        },
+        qa_sim_error::ResultExt,
+    }
+};
 
 
 
@@ -49,7 +65,7 @@ impl Annealer {
 
         let ctx = CudaContext::new(0)?;
         let stream = ctx.default_stream();
-        let module = ctx.load_module(*ptx)?;
+        let module = ctx.load_module(ptx.clone())?;
 
         let develop_time_func = match use_warp(&config) {
             true => module.load_function("develop_time").kernel_not_found_err("develop_time")?,
@@ -60,14 +76,14 @@ impl Annealer {
 
         let f0_host = vec![Complex64::new(1.0f64 / (n as f64).sqrt(), 0.0f64); n as usize];
         
-        let mut f0_dev = stream.clone_htod(&f0_host)?;
-        let mut f1_dev = stream.alloc_zeros::<Complex64>(n as usize)?; 
+        let f0_dev = stream.clone_htod(&f0_host)?;
+        let f1_dev = stream.alloc_zeros::<Complex64>(n as usize)?; 
         let diag_dev = stream.clone_htod(diag)?; 
         let norm_dev = stream.alloc_zeros::<f64>(1)?;
 
         let cfg_for_vec = create_launch_config(n as usize, config.threads_x, KernelLayout::Vector2D);
         let cfg_for_develop_time = create_launch_config(n as usize, config.threads_x, KernelLayout::Warp);
-        let cfg_for_norm = create_launch_config(n as usize, config.threads_x, KernelLayout::Warp);
+        let mut cfg_for_norm = create_launch_config(n as usize, config.threads_x, KernelLayout::Warp);
         cfg_for_norm.shared_mem_bytes = config.threads_x * (std::mem::size_of::<f64>() as u32);
 
         let annealer = Annealer {
@@ -91,6 +107,54 @@ impl Annealer {
         };
         Ok(annealer)
 
+    }
+
+    pub unsafe fn develop_time(&self, &a: &f64, &b: &f64) -> SimResult<()>{
+        unsafe {
+            self.stream
+                .launch_builder(&self.develop_time_func)
+                .arg(&a)
+                .arg(&b)
+                .arg(&self.config.dt)
+                .arg(&self.f0_dev)
+                .arg(&self.n)
+                .arg(&self.bit_count)
+                .arg(&self.f1_dev)
+                .launch(self.cfg_for_develop_time)
+                .kernel_process_err("develop time kernel")?;
+        }
+        Ok(())
+    }
+
+    pub fn swap(&mut self) {
+        std::mem::swap(&mut self.f0_dev, &mut self.f1_dev);
+    }
+
+    pub unsafe fn calc_norm(&self) -> SimResult<()> {
+        unsafe {
+            self.stream
+                .launch_builder(&self.calc_norm_func)
+                .arg(&self.f0_dev)
+                .arg(&self.norm_dev)
+                .arg(&self.n)
+                .launch(self.cfg_for_norm)
+                .kernel_process_err("calc norm kernel")?;
+        }
+        Ok(())
+    }
+
+    pub unsafe fn update_f0(&self) -> SimResult<()> {
+        unsafe {
+            self.stream
+                .launch_builder(&self.update_f0_func)
+                .arg(&self.f0_dev)
+                .arg(&self.norm_dev)
+                .arg(&self.f1_dev)
+                .arg(&self.n)
+                .launch(self.cfg_for_vec)
+                .kernel_process_err("update f0 kernel")?;
+        }
+        Ok(())
     }
 }
 
