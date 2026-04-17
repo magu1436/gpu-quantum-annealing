@@ -150,13 +150,7 @@ impl Annealer {
                 .arg(&self.n)
                 .launch(self.cfg_for_norm)
                 .kernel_process_err("calc norm kernel")?;
-        }
-        Ok(())
-    }
 
-    /// 事前に計算されたノルムを用いて状態ベクトルを更新する
-    pub unsafe fn update_f0(&self) -> SimResult<()> {
-        unsafe {
             self.stream
                 .launch_builder(&self.update_f0_func)
                 .arg(&self.f0_dev)

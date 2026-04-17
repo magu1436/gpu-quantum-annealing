@@ -33,7 +33,6 @@ pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
             annealer.develop_time(&a, &b)?;
             annealer.swap();
             annealer.calc_norm()?;
-            annealer.update_f0()?;
         }
     }
     annealer.stream.synchronize()?;
