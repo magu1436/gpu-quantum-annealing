@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 gpu_quantum_annealing = { path = "../gpu_quantum_annealing" }
+cudarc = { version = "0.19.4", features = ["driver", "nvrtc", "cuda-version-from-build-system"] }

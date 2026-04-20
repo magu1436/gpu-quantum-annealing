@@ -1,41 +1,55 @@
+use cudarc::driver::{LaunchConfig, PushKernelArg};
 use gpu_quantum_annealing::{
     AnnealingConfig,
     execute::execute,
+    Worker,
 };
 
 fn main() {
 
-    let nums = [1, 2, 3, 4];
-    let bit_count: usize = nums.len();
+    let nums: Vec<i32> = (1..=4).collect();
+    let bit_count = nums.len() as u32;
+    let n = 2f64.powi(bit_count as i32) as usize;
 
-    let bit = |decimal: u32, idx: usize| -> i32 {
-        let shift = nums.len() as u32 - 1 - (idx as u32);
-        ((decimal >> shift) & 1) as i32
+    let w = match Worker::new("src/integer_pertition.cu") {
+        Ok(w) => w,
+        Err(e) => panic!("{}", e),
+    };
+    let func = w.module.load_function("integer_partition").unwrap();
+
+    let nums_dev = w.stream.clone_htod(&nums).unwrap();
+    let diag_dev = w.stream.alloc_zeros::<f64>(n).unwrap();
+
+    let threads_x: u32 = 256;
+    let cfg = LaunchConfig {
+        block_dim: (threads_x, 1, 1),
+        grid_dim: (((n as u32) + threads_x - 1) / threads_x, 1, 1),
+        shared_mem_bytes: 0,
     };
 
-    let objective_function = | idx: usize | -> f64 {
-        let mut result = 0.0;
-        for i in 0..nums.len() {
-            for j in i+1..nums.len() {
-                let a = 2 * bit(idx as u32, i) - 1;
-                let b = 2 * bit(idx as u32, j) - 1;
-                result += (a * b * ((nums[i] * nums[j]))) as f64;
+    unsafe {
+        match w.stream
+            .launch_builder(&func)
+            .arg(&nums_dev)
+            .arg(&bit_count)
+            .arg(&diag_dev)
+            .launch(cfg) {
+                Ok(_) => (),
+                Err(e) => panic!("{}", e),
             }
-        }
-        result
-    };
-
-    let mut diag = vec![0.0f64; 2u64.pow(bit_count as u32) as usize];
-    for i in 0..2u64.pow(bit_count as u32) as usize {
-        diag[i] = objective_function(i);
     }
+    let diag = w.stream.clone_dtoh(&diag_dev).unwrap();
 
     let cfg = AnnealingConfig {
         threads_x: 128,
+        tau: 1.0,
+        dt: 1e-5,
+        develop_time_method: gpu_quantum_annealing::DevelopTimeMethod::DevelopTime,
+        b0: 30.0,
         ..Default::default()
     };
 
-    println!("{:?}", diag);
+    // println!("{:?}", diag);
 
     let r = execute(&diag, cfg);
     match r {
