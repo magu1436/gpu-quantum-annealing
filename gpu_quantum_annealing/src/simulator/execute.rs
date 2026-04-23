@@ -3,31 +3,35 @@ use std::time;
 use crate::{
     config::AnnealingConfig,
     simulator::{
+        analyze::{
+            AnalysisResult,
+            analyze,
+            AnalysisConfig,
+        },
         annealer::Annealer,
         compile_ptx::compile_ptx,
-        complex::Complex64,
-        qa_sim_error::SimResult,
-    }
+        qa_sim_error::SimResult
+    },
 };
 
-pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
+pub fn execute(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_config: AnalysisConfig) -> SimResult<AnalysisResult>
 {
 
     let start_time = time::Instant::now();
     print!("\nExecuting quantum annealing simulation...\n");
 
     // 定数
-    let step = (config.tau / config.dt) as u32;
+    let step = (annealing_config.tau / annealing_config.dt) as u32;
 
     let ptx = compile_ptx("modules.cu")?;
-    let mut annealer = Annealer::new(diag, &ptx, &config)?;
+    let mut annealer = Annealer::new(diag, &ptx, &annealing_config)?;
 
 
     let mut t: f64;
     for i in 0..step {
-        t = (i as f64) * config.dt;
-        let a = t / config.tau;
-        let b = config.b0 * (1.0 - a);
+        t = (i as f64) * annealing_config.dt;
+        let a = t / annealing_config.tau;
+        let b = annealing_config.b0 * (1.0 - a);
 
         unsafe  {
             annealer.develop_time(&a, &b)?;
@@ -43,16 +47,8 @@ pub fn execute(diag: &Vec<f64>, config: AnnealingConfig) -> SimResult<Vec<f64>>
         elapsed
     );
 
-    let result = annealer.stream.clone_dtoh(&annealer.f0_dev)?;
-    let prob = amplitudes_to_probabilities(result);
-    Ok(prob)
+    let amplitudes = annealer.stream.clone_dtoh(&annealer.f0_dev)?;
+    let result = analyze(amplitudes, analyze_config);
+    Ok(result)
 
-}
-
-fn amplitudes_to_probabilities(amplitudes: Vec<Complex64>) -> Vec<f64> {
-    let mut probabilities = vec![0.0; amplitudes.len()];
-    for (i, v) in amplitudes.iter().enumerate() {
-        probabilities[i] = v.abs().powi(2);
-    }
-    probabilities
 }

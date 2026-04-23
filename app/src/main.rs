@@ -51,9 +51,13 @@ fn main() {
 
     // println!("{:?}", diag);
 
-    let r = execute(&diag, cfg);
+    let r = execute(
+        &diag,
+        cfg,
+        gpu_quantum_annealing::AnalysisConfig::default()
+    );
     match r {
-        Ok(prob) => println!("{:?}", prob),
+        Ok(prob) => println!("{:#?}, \n{:#?}, \n{:#?}", prob.sorted_probabilities[0], prob.sorted_probabilities[1], prob.sorted_probabilities[2]),
         Err(e) => panic!("{}", e),
     };
 }

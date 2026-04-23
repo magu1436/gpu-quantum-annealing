@@ -17,7 +17,7 @@ impl Worker {
         kernel_file_path: &str,
     ) -> SimResult<Self> {
         let ctx = CudaContext::new(0)?;
-        let stream = ctx.default_stream();
+        let stream = ctx.new_stream()?;
         let source = std::fs::read_to_string(kernel_file_path).unwrap();
         let module = ctx.load_module(
             compile_ptx_with_opts(
