@@ -1,51 +1,26 @@
-use cudarc::driver::{LaunchConfig, PushKernelArg};
 use gpu_quantum_annealing::{
     AnnealingConfig,
     execute::execute,
-    Worker,
 };
+
+use crate::sample::create_prisoners_dillemma_hll;
+mod sample;
 
 fn main() {
 
-    let nums: Vec<i32> = (1..=4).collect();
-    let bit_count = nums.len() as u32;
-    let n = 2f64.powi(bit_count as i32) as usize;
-
-    let w = match Worker::new("src/integer_pertition.cu") {
-        Ok(w) => w,
-        Err(e) => panic!("{}", e),
-    };
-    let func = w.module.load_function("integer_partition").unwrap();
-
-    let nums_dev = w.stream.clone_htod(&nums).unwrap();
-    let diag_dev = w.stream.alloc_zeros::<f64>(n).unwrap();
-
-    let threads_x: u32 = 256;
-    let cfg = LaunchConfig {
-        block_dim: (threads_x, 1, 1),
-        grid_dim: (((n as u32) + threads_x - 1) / threads_x, 1, 1),
-        shared_mem_bytes: 0,
-    };
-
-    unsafe {
-        match w.stream
-            .launch_builder(&func)
-            .arg(&nums_dev)
-            .arg(&bit_count)
-            .arg(&diag_dev)
-            .launch(cfg) {
-                Ok(_) => (),
-                Err(e) => panic!("{}", e),
-            }
-    }
-    let diag = w.stream.clone_dtoh(&diag_dev).unwrap();
+    let num_players = 3;
+    let num_pen = 6;
+    let num_slack = 3;
+    let start_slack = 3;
+    let hyper_params = vec![-5, -5, -5];
+    let diag = create_prisoners_dillemma_hll(num_players, num_pen, num_slack, start_slack, hyper_params);
 
     let cfg = AnnealingConfig {
         threads_x: 128,
-        tau: 1.0,
-        dt: 1e-5,
+        tau: 2.0,
+        dt: 2.0,
         develop_time_method: gpu_quantum_annealing::DevelopTimeMethod::DevelopTime,
-        b0: 30.0,
+        b0: 1.0,
         ..Default::default()
     };
 
