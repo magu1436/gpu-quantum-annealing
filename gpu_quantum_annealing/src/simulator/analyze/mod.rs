@@ -1,6 +1,7 @@
 mod analysis_result;
 mod config;
 mod analyzer;
+pub mod bin_writer;
 
 pub use analysis_result::AnalysisResult;
 pub use config::AnalysisConfig;

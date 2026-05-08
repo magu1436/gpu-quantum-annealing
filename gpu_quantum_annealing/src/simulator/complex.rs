@@ -1,8 +1,9 @@
+use bytemuck::{Pod, Zeroable};
 use cudarc::driver::{DeviceRepr, ValidAsZeroBits};
 
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct Complex64 {
     pub re: f64,
     pub im: f64,

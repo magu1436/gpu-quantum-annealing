@@ -8,7 +8,10 @@ pub use simulator::qa_sim_error::{
 };
 pub use simulator::{
     execute,
-    analyze::AnalysisConfig,
+    analyze::{
+        AnalysisConfig,
+        bin_writer,
+    },
 };
 pub use config::{
     AnnealingConfig,

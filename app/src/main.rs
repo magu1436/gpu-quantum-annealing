@@ -1,6 +1,5 @@
 use gpu_quantum_annealing::{
-    AnnealingConfig,
-    execute::execute,
+    AnnealingConfig, bin_writer::write_f64_bin, execute::execute
 };
 
 use crate::sample::create_prisoners_dillemma_hll;
@@ -17,14 +16,13 @@ fn main() {
 
     let cfg = AnnealingConfig {
         threads_x: 128,
+        b0: 1.0,
         tau: 2.0,
         dt: 2.0,
-        develop_time_method: gpu_quantum_annealing::DevelopTimeMethod::DevelopTime,
-        b0: 1.0,
         ..Default::default()
     };
 
-    // println!("{:?}", diag);
+    write_f64_bin(&"app/results/diag.bin", &diag).unwrap();
 
     let r = execute(
         &diag,
@@ -32,7 +30,11 @@ fn main() {
         gpu_quantum_annealing::AnalysisConfig::default()
     );
     match r {
-        Ok(prob) => println!("{:#?}, \n{:#?}, \n{:#?}", prob.sorted_probabilities[0], prob.sorted_probabilities[1], prob.sorted_probabilities[2]),
+        Ok(prob) => {
+            println!("{:#?}, \n{:#?}, \n{:#?}", prob.sorted_probabilities[0], prob.sorted_probabilities[1], prob.sorted_probabilities[2]);
+            write_f64_bin("app/results/probabilities.bin", &prob.probabilities).unwrap();
+            println!("{:#?}", prob.probabilities.len());
+        },
         Err(e) => panic!("{}", e),
     };
 }
