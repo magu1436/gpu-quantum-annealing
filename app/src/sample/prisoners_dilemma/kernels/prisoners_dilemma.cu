@@ -32,7 +32,7 @@ void create_prisoners_dilemma_diag(
 
     // ハミルトニアン目的関数値
     for (i = 0; i < num_player; i++) {
-        h += payoff_of_n_prisoners_dilemma(i, actions, num_player);
+        h += -payoff_of_n_prisoners_dilemma(i, actions, num_player);
     }
 
     // ペナルティ項の作成
