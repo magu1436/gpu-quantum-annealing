@@ -31,7 +31,7 @@ impl Default for AnnealingConfig {
             dt: 1e-3,
             tau: 20.0,
             b0: 10.0,
-            threads_x: 2,
+            threads_x: 128,
             develop_time_method: DevelopTimeMethod::Default,
         }
     }

@@ -7,8 +7,8 @@ pub fn create_integer_pertition_hll(nums: Vec<i32>) -> Vec<f64> {
     let bit_count = nums.len() as u32;
     let n = 2f64.powi(bit_count as i32) as usize;
 
-    let kernel_dir = "src/sample/integer_partition/kernels/";
-    let kernel_file = "integer_partition.cu";
+    let kernel_dir = "src/sample/integer_pertition/kernels/";
+    let kernel_file = "integer_pertition.cu";
     let w = match Worker::new(kernel_dir, kernel_file) {
         Ok(w) => w,
         Err(e) => panic!("{}", e),

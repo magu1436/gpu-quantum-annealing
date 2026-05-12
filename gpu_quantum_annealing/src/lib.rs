@@ -12,6 +12,11 @@ pub use simulator::{
         AnalysisConfig,
         bin_writer,
     },
+    observe::{
+        ObserverConfig,
+        ProgressData,
+        ObserverState,
+    }
 };
 pub use config::{
     AnnealingConfig,

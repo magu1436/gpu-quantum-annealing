@@ -1,40 +1,44 @@
+use std::time::{self, Instant};
+
 use gpu_quantum_annealing::{
-    AnnealingConfig, bin_writer::write_f64_bin, execute::execute
+    AnnealingConfig, ObserverConfig, ObserverState, execute::execute
 };
 
-use crate::sample::create_prisoners_dillemma_hll;
+use crate::sample::{create_integer_pertition_hll};
 mod sample;
 
 fn main() {
 
-    let num_players = 3;
-    let num_pen = 6;
-    let num_slack = 3;
-    let start_slack = 3;
-    let hyper_params = vec![-5, -5, -5];
-    let diag = create_prisoners_dillemma_hll(num_players, num_pen, num_slack, start_slack, hyper_params);
+    let nums = vec![0; 5];
+    let diag = create_integer_pertition_hll(nums);
 
-    let cfg = AnnealingConfig {
-        threads_x: 128,
-        b0: 1.0,
-        tau: 2.0,
-        dt: 2.0,
-        ..Default::default()
-    };
-
-    write_f64_bin(&"app/results/diag.bin", &diag).unwrap();
+    let cfg = AnnealingConfig::default();
 
     let r = execute(
         &diag,
         cfg,
-        gpu_quantum_annealing::AnalysisConfig::default()
+        gpu_quantum_annealing::AnalysisConfig::default(),
+        ObserverConfig::new(1.0, time::Instant::now(), observe_func),
     );
     match r {
         Ok(prob) => {
             println!("{:#?}, \n{:#?}, \n{:#?}", prob.sorted_probabilities[0], prob.sorted_probabilities[1], prob.sorted_probabilities[2]);
-            write_f64_bin("app/results/probabilities.bin", &prob.probabilities).unwrap();
+            // write_f64_bin("app/results/probabilities.bin", &prob.probabilities).unwrap();
             println!("{:#?}", prob.probabilities.len());
         },
         Err(e) => panic!("{}", e),
     };
+}
+
+fn observe_func(p: &mut ObserverState<Instant>) {
+    let progress = (p.progress.current_step as f64) / (p.progress.total_step as f64) * 100.0;
+    println!("progress: {}%", progress);
+    println!("current_step: {}", p.progress.current_step);
+    if p.progress.current_step == 0 {
+        p.user_data = time::Instant::now();
+    }
+
+    if p.progress.is_finished {
+        println!("elapsed: {}", p.user_data.elapsed().as_secs_f64());
+    }
 }
