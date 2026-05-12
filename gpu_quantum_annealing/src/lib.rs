@@ -15,7 +15,6 @@ pub use simulator::{
     observe::{
         ObserverConfig,
         ProgressData,
-        ObserverState,
     }
 };
 pub use config::{
