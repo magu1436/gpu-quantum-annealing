@@ -1,7 +1,5 @@
-use std::time::{self, Instant};
-
 use gpu_quantum_annealing::{
-    AnnealingConfig, ObserverConfig, ObserverState, execute::execute
+    AnnealingConfig, ObserverConfig, ProgressData, execute::execute
 };
 
 use crate::sample::{create_integer_pertition_hll};
@@ -12,13 +10,27 @@ fn main() {
     let nums = vec![0; 5];
     let diag = create_integer_pertition_hll(nums);
 
-    let cfg = AnnealingConfig::default();
+    let cfg = AnnealingConfig {
+        tau: 2.0,
+        dt: 2e-6,
+        ..Default::default()
+    };
+
+    let start_time = std::time::Instant::now();
+    let observe_func = move |p: &ProgressData| {
+        println!("progress: {}%", (p.current_step as f64) / (p.total_step as f64) * 100.0);
+
+        if p.is_finished {
+            let elapsed = start_time.elapsed().as_secs_f64();
+            println!("elapsed: {}s", elapsed);
+        }
+    };
 
     let r = execute(
         &diag,
         cfg,
         gpu_quantum_annealing::AnalysisConfig::default(),
-        ObserverConfig::new(1.0, time::Instant::now(), observe_func),
+        ObserverConfig::new(1.0, observe_func),
     );
     match r {
         Ok(prob) => {
@@ -28,17 +40,4 @@ fn main() {
         },
         Err(e) => panic!("{}", e),
     };
-}
-
-fn observe_func(p: &mut ObserverState<Instant>) {
-    let progress = (p.progress.current_step as f64) / (p.progress.total_step as f64) * 100.0;
-    println!("progress: {}%", progress);
-    println!("current_step: {}", p.progress.current_step);
-    if p.progress.current_step == 0 {
-        p.user_data = time::Instant::now();
-    }
-
-    if p.progress.is_finished {
-        println!("elapsed: {}", p.user_data.elapsed().as_secs_f64());
-    }
 }

@@ -1,50 +1,41 @@
 use std::{sync::{Arc, Mutex}, thread::sleep, time::Duration};
 
-use crate::simulator::observe::{ObserverConfig, ObserverState, ProgressData};
+use crate::simulator::observe::{ObserverConfig, ProgressData};
 
 
 #[repr(C)]
-pub struct Observer<T> {
-    config: ObserverConfig<T>,
-    progress_state_arc: Arc<Mutex<ObserverState<T>>>,
+pub struct Observer {
+    config: ObserverConfig,
+    progress_data_arc: Arc<Mutex<ProgressData>>,
 }
 
-impl<T> Observer<T> 
-where 
-    T: Clone + Send + 'static,
+impl Observer
 {
-    pub fn new(config: ObserverConfig<T>, progress_state_arc: Arc<Mutex<ObserverState<T>>>) -> Self {
+    pub fn new(config: ObserverConfig, progress_data_arc: Arc<Mutex<ProgressData>>) -> Self {
         Self {
             config,
-            progress_state_arc,
+            progress_data_arc,
         }
     }
 
-    pub fn run(&self) {
+    pub fn run(&mut self) {
         let mut last_saved_progress: Option<ProgressData> = None;
         
         loop {
-            let is_finished ={
-                let mut snapshot = self.progress_state_arc.lock().unwrap();
-
-                if last_saved_progress != Some(snapshot.progress) {
-                    (self.config.observe_func)(&mut snapshot);
-                    last_saved_progress = Some(snapshot.progress);
-                };
-
-                snapshot.progress.is_finished
+            let snapshot ={
+                let p = self.progress_data_arc.lock().unwrap();
+                p.clone()
             };
-
-            if is_finished {
-                break;
+            
+            if last_saved_progress != Some(snapshot) {
+                last_saved_progress = Some(snapshot);
+                (self.config.observe_func)(&snapshot);
             }
 
+            if snapshot.is_finished {
+                break;
+            }
             sleep(Duration::from_secs_f64(self.config.sleep_time_secs));
-        }
-
-        {
-            let mut snapshot = self.progress_state_arc.lock().unwrap();
-            (self.config.observe_func)(&mut snapshot);
         }
     }
 }

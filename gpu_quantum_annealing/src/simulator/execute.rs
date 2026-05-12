@@ -4,27 +4,25 @@ use crate::{
     ObserverConfig, ProgressData, config::AnnealingConfig, simulator::{
         analyze::{
             AnalysisConfig, AnalysisResult, analyze
-        }, annealer::Annealer, compile_ptx::compile_ptx, observe::{Observer, ObserverState}, qa_sim_error::SimResult
+        }, annealer::Annealer, compile_ptx::compile_ptx, observe::Observer, qa_sim_error::SimResult
     }
 };
 
-pub fn execute<T>(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_config: AnalysisConfig, observer_config: ObserverConfig<T>) -> SimResult<AnalysisResult>
-where
-    T: Clone + Send + 'static,
-{
+pub fn execute(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_config: AnalysisConfig, observer_config: ObserverConfig) -> SimResult<AnalysisResult>{
 
     // 定数
     let step = (annealing_config.tau / annealing_config.dt) as u64;
 
     // observer の実行
-    let state = Arc::new(Mutex::new(ObserverState {
-        progress: ProgressData{total_step: step, current_step: 0, is_finished: false},
-        user_data: observer_config.user_data.clone(),
+    let progress = Arc::new(Mutex::new(ProgressData {
+        total_step: step,
+        current_step: 0,
+        is_finished: false
     }));
-    let state_for_observer = Arc::clone(&state);
+    let progress_for_observer = Arc::clone(&progress);
 
     let observer_thread = thread::spawn(move || {
-        let observer = Observer::new(observer_config, state_for_observer);
+        let mut observer = Observer::new(observer_config, progress_for_observer);
         observer.run();
     });
 
@@ -34,10 +32,6 @@ where
 
     let mut t: f64;
     let mut ratio: u8 = 0;
-    {
-        let mut p = state.lock().unwrap();
-        p.progress.current_step = 0;
-    }
     for i in 0..step {
         t = (i as f64) * annealing_config.dt;
         let a = t / annealing_config.tau;
@@ -51,16 +45,16 @@ where
 
         let new_ratio = (i * 100 / step) as u8;
         if ratio != new_ratio {
-            let mut p = state.lock().unwrap();
-            p.progress.current_step = i;
+            let mut p = progress.lock().unwrap();
+            p.current_step = i;
         }
         ratio = new_ratio;
     }
-    annealer.stream.synchronize()?;
     {
-        let mut p = state.lock().unwrap();
-        p.progress.is_finished = true;
+        let mut p = progress.lock().unwrap();
+        p.is_finished = true;
     }
+    annealer.stream.synchronize()?;
 
     observer_thread.join().unwrap();
 
