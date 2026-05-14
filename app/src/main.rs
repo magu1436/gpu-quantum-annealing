@@ -7,7 +7,7 @@ mod sample;
 
 fn main() {
 
-    let nums = vec![0; 5];
+    let nums = vec![1, 2, 3];
     let diag = create_integer_pertition_hll(nums);
 
     let cfg = AnnealingConfig {

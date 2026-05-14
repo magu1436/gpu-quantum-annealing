@@ -38,13 +38,13 @@ void develop_time_warp(
     if (lane == 0) {
         Complex64 t_diag;
         t_diag.re = 1.0;
-        t_diag.im = -0.5 * dt * (b + a * diag[row]);
+        t_diag.im = -0.5 * dt * a * diag[row];
         sum = cmul(t_diag, f0[row]);
     }
 
     Complex64 t_off;
     t_off.re = 0.0;
-    t_off.im = 0.5 * dt * b;
+    t_off.im = -0.5 * dt * b;
 
     // 非対角項の計算
     // lane, lane + 32, lane + 64, ... の総和をとる
