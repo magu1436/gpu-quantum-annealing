@@ -12,7 +12,7 @@ fn main() {
 
     let cfg = AnnealingConfig {
         tau: 2.0,
-        dt: 2e-6,
+        dt: 2e-4,
         ..Default::default()
     };
 

@@ -4,7 +4,7 @@ use crate::{
     ObserverConfig, ProgressData, config::AnnealingConfig, simulator::{
         analyze::{
             AnalysisConfig, AnalysisResult, analyze
-        }, annealer::Annealer, compile_ptx::compile_ptx, observe::Observer, qa_sim_error::SimResult
+        }, annealer::{self, Annealer}, compile_ptx::compile_ptx, observe::Observer, qa_sim_error::SimResult, quadratic_annealer::QuadraticAnnealer
     }
 };
 
@@ -28,11 +28,17 @@ pub fn execute(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_confi
 
     // annealer の実行
     let ptx = compile_ptx("modules.cu")?;
-    let mut annealer = Annealer::new(diag, &ptx, &annealing_config)?;
+    // let mut annealer = Annealer::new(diag, &ptx, &annealing_config)?;
+    let mut annealer = QuadraticAnnealer::new(diag, &ptx, &annealing_config)?;
 
     let mut t: f64;
     let mut ratio: u8 = 0;
-    for i in 0..step {
+    unsafe {
+        annealer.pre_develop_time(&0.0, &1.0)?;
+        annealer.swap();
+        annealer.calc_norm()?;
+    }
+    for i in 1..step {
         t = (i as f64) * annealing_config.dt;
         let a = t / annealing_config.tau;
         let b = annealing_config.b0 * (1.0 - a);
@@ -60,7 +66,7 @@ pub fn execute(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_confi
 
     observer_thread.join().unwrap();
 
-    let amplitudes = annealer.stream.clone_dtoh(&annealer.f0_dev)?;
+    let amplitudes = annealer.stream.clone_dtoh(&annealer.f_current_dev)?;
     let result = analyze(amplitudes, analyze_config);
     Ok(result)
 

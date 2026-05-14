@@ -1,4 +1,5 @@
 #include "develop_time.cu"
 #include "develop_time_warp.cu"
+#include "quadratic_develop_time_warp.cu"
 #include "norm.cu"
 #include "update_f0.cu"
