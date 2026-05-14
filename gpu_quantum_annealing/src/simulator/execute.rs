@@ -40,7 +40,9 @@ pub fn execute(diag: &Vec<f64>, annealing_config: AnnealingConfig, analyze_confi
         unsafe  {
             annealer.develop_time(&a, &b)?;
             annealer.swap();
-            annealer.calc_norm()?;
+            if i % annealing_config.norm_interval == 0 {
+                annealer.calc_norm()?;
+            }
         }
 
         let new_ratio = (i * 100 / step) as u8;

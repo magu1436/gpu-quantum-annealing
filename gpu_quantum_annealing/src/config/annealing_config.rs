@@ -21,6 +21,8 @@ pub struct AnnealingConfig {
     pub b0: f64,
     /// スレッド数
     pub threads_x: u32,
+    /// 何回に一度正規化を行うか
+    pub norm_interval: u64,
     /// 時間発展関数の指定
     pub develop_time_method: DevelopTimeMethod,
 }
@@ -32,6 +34,7 @@ impl Default for AnnealingConfig {
             tau: 20.0,
             b0: 10.0,
             threads_x: 128,
+            norm_interval: 10,
             develop_time_method: DevelopTimeMethod::Default,
         }
     }
