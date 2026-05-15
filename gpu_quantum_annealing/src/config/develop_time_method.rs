@@ -3,5 +3,6 @@
 pub enum DevelopTimeMethod {
     DevelopTime,
     DevelopTimeWarp,
+    QuadraticDevelopTimeWarp,
     Default,
 }

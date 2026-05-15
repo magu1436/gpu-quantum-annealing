@@ -168,6 +168,7 @@ fn use_warp(config: &AnnealingConfig) -> bool {
     match config.develop_time_method {
         DevelopTimeMethod::DevelopTime => false,
         DevelopTimeMethod::DevelopTimeWarp => true,
+        DevelopTimeMethod::QuadraticDevelopTimeWarp => true,
         DevelopTimeMethod::Default => config.threads_x < 32
     }
 }

@@ -10,7 +10,6 @@ use crate::config::DevelopTimeMethod;
 ///     ..Default::default()
 /// };
 /// ```
-#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct AnnealingConfig {
     /// 時間変化量
