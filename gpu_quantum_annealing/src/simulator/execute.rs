@@ -4,7 +4,8 @@ use crate::{
     ObserverConfig, ProgressData, config::AnnealingConfig, simulator::{
         analyze::{
             AnalysisConfig, AnalysisResult, analyze
-        }, annealer::{self, Annealer}, compile_ptx::compile_ptx, observe::Observer, qa_sim_error::SimResult, quadratic_annealer::QuadraticAnnealer
+        },
+        annealer::QuadraticAnnealer, compile_ptx::compile_ptx, observe::Observer, qa_sim_error::SimResult,
     }
 };
 
