@@ -24,13 +24,13 @@ void develop_time(
     // 対角項だけ先に加算
     Complex64 t_diag;
     t_diag.re = 1.0;
-    t_diag.im = -0.5 * dt * (b + a * diag[x]);
+    t_diag.im = -0.5 * dt * a * diag[x];
     z = cmul(t_diag, f0[x]);
 
     // 非対角項
     Complex64 t_off;
     t_off.re = 0.0;
-    t_off.im = 0.5 * dt * b;
+    t_off.im = 0.0 - (-0.5 * dt * b);
 
     for (int bit = 0; bit < bit_count; bit++) {
         // 一箇所だけ 1 でそれ以外が 0 である数値を作って x を反転させて, 

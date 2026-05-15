@@ -35,7 +35,7 @@ void quadratic_develop_time_warp(
     // 非対角成分
     Complex64 non_diag_elem;
     non_diag_elem.re = 0.0;
-    non_diag_elem.im = dt * b; // -2 * 0.5 * dt * b;
+    non_diag_elem.im = -dt * b; // -2 * 0.5 * dt * b;
 
     for (int bit = lane; bit < bit_count; bit += 32) {
         unsigned int col = row ^ (1u << bit);

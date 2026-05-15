@@ -44,7 +44,7 @@ void develop_time_warp(
 
     Complex64 t_off;
     t_off.re = 0.0;
-    t_off.im = -0.5 * dt * b;
+    t_off.im = 0.0 - (-0.5 * dt * b);
 
     // 非対角項の計算
     // lane, lane + 32, lane + 64, ... の総和をとる

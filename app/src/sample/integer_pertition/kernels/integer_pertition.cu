@@ -9,7 +9,7 @@ void integer_partition(const int* nums, unsigned int bit_count, double* result) 
         for (unsigned int j = i + 1; j < bit_count; j++) {
             int a = 2 * ((state >> (bit_count - 1 - i)) & 1) - 1;
             int b = 2 * ((state >> (bit_count - 1 - j)) & 1) - 1;
-            sum += -1 * (double)a * (double)b * (double)nums[i] * (double)nums[j];
+            sum += -(-1 * (double)a * (double)b) * (double)nums[i] * (double)nums[j];
         }
     }
     result[state] = sum;
