@@ -1,6 +1,8 @@
 use cudarc::{driver::DriverError, nvrtc::CompileError};
 use thiserror::Error;
 
+use crate::simulator::annealer::AnnealingError;
+
 #[derive(Error, Debug)]
 pub enum QASimError {
 
@@ -30,20 +32,9 @@ pub enum QASimError {
 
     #[error("CUDA driver error: {0}")]
     Driver(#[from] DriverError),
+
+    #[error("Annealer error: {0} ")]
+    Annealer(#[from] AnnealingError),
 }
 
 pub type SimResult<T> = Result<T, QASimError>;
-
-pub trait ResultExt<T> {
-    fn kernel_not_found_err(self, kernel: &'static str) -> SimResult<T>;
-    fn kernel_process_err(self, kernel: &'static str) -> SimResult<T>;
-}
-
-impl<T> ResultExt<T> for Result<T, DriverError> {
-    fn kernel_not_found_err(self, kernel: &'static str) -> SimResult<T> {
-        self.map_err(|e| QASimError::KernelNotFound { kernel, e })
-    }
-    fn kernel_process_err(self, kernel: &'static str) -> SimResult<T> {
-        self.map_err(|e| QASimError::KernelLaunchFailed { kernel, e })
-    }
-}
