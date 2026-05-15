@@ -19,7 +19,6 @@ use crate::{
         annealer::{
             AnnealingResult,
             ResultExt,
-            AnnealingError,
             KernelLayout,
             create_launch_config
         },
