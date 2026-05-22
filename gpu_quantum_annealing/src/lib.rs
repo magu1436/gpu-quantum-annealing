@@ -22,3 +22,4 @@ pub use config::{
     DevelopTimeMethod,
 };
 pub use util::worker::Worker;
+pub use util::binary;
